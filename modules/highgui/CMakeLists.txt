@@ -20,6 +20,10 @@ if(APPLE)
   list(APPEND HIGHGUI_LIBRARIES ${ZLIB_LIBRARIES})
 endif()
 
+if(HAVE_WEBP)
+  add_definitions(-DHAVE_WEBP)
+endif()
+
 set(highgui_hdrs
     ${CMAKE_CURRENT_LIST_DIR}/src/precomp.hpp
     )
@@ -38,13 +42,17 @@ file(GLOB highgui_ext_hdrs
 list(REMOVE_ITEM highgui_ext_hdrs "${CMAKE_CURRENT_LIST_DIR}/include/opencv2/${name}/highgui_winrt.hpp")
 
 if(HAVE_QT5)
-  set(CMAKE_AUTOMOC ON)
+  # "Automoc" doesn't work properly with opencv_world build, use QT5_WRAP_CPP() directly
+  #set(CMAKE_AUTOMOC ON)
+
   set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
   QT5_ADD_RESOURCES(_RCC_OUTFILES ${CMAKE_CURRENT_LIST_DIR}/src/window_QT.qrc)
+  QT5_WRAP_CPP(_MOC_OUTFILES ${CMAKE_CURRENT_LIST_DIR}/src/window_QT.h)
   list(APPEND highgui_srcs
        ${CMAKE_CURRENT_LIST_DIR}/src/window_QT.cpp
        ${CMAKE_CURRENT_LIST_DIR}/src/window_QT.h
+       ${_MOC_OUTFILES}
        ${_RCC_OUTFILES})
 
   foreach(dt5_dep Core Gui Widgets Test Concurrent)
@@ -112,9 +120,6 @@ elseif(HAVE_WIN32UI)
   list(APPEND highgui_srcs ${CMAKE_CURRENT_LIST_DIR}/src/window_w32.cpp)
 elseif(HAVE_GTK OR HAVE_GTK3)
   list(APPEND highgui_srcs ${CMAKE_CURRENT_LIST_DIR}/src/window_gtk.cpp)
-elseif(HAVE_CARBON)
-  list(APPEND highgui_srcs ${CMAKE_CURRENT_LIST_DIR}/src/window_carbon.cpp)
-  list(APPEND HIGHGUI_LIBRARIES "-framework Carbon" "-framework QuickTime")
 elseif(HAVE_COCOA)
   list(APPEND highgui_srcs ${CMAKE_CURRENT_LIST_DIR}/src/window_cocoa.mm)
   list(APPEND HIGHGUI_LIBRARIES "-framework Cocoa")
